@@ -15,6 +15,7 @@ use cw721_base::{Cw721Contract, MintMsg};
 const CONTRACT_NAME: &str = "crates.io:squares";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CustomNFT {
     pub uri: String,
 }
