@@ -1,10 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Order, Response, StdResult};
 
 use crate::error::ContractError;
 use crate::msg::{CustomNFT, InstantiateMsg};
 use crate::state::{State, STATE};
+use cw721::Cw721Query;
 use cw721_base::state::TokenInfo;
 use cw721_base::Cw721Contract;
 
@@ -18,7 +19,7 @@ pub fn instantiate(
     _env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
-) -> Result<Response, ContractError> {
+) -> Result<Response, cw721_base::ContractError> {
     let token_count = msg.tokens.len();
     let owner = info.sender.clone();
 
@@ -31,7 +32,7 @@ pub fn instantiate(
     )?;
 
     let tract = Cw721Contract::<CustomNFT, Empty>::default();
-    let resp = tract.instantiate(deps, _env, info, msg.base).unwrap();
+    let resp = tract.instantiate(deps, _env, info, msg.base)?;
 
     Ok(resp
         .add_attribute("owner", owner)
@@ -58,6 +59,20 @@ pub fn mint(
     _env: Env,
     info: MessageInfo,
 ) -> Result<Response, cw721_base::ContractError> {
+    let owned_tokens: Vec<_> = tract
+        .tokens
+        .idx
+        .owner
+        .prefix(info.sender.clone())
+        .keys(deps.storage, None, None, Order::Ascending)
+        .collect();
+
+    if owned_tokens.len() > 10 {
+        return Err(cw721_base::ContractError::Std(
+            cosmwasm_std::StdError::generic_err("a single wallet cannot own more than 10 tokens"),
+        ));
+    }
+
     let mut state = STATE.load(deps.storage)?;
     let token_extension = state.tokens.pop().ok_or(cw721_base::ContractError::Std(
         cosmwasm_std::StdError::generic_err("contract is out of tokens"),

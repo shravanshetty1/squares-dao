@@ -5,109 +5,11 @@
 * Number of NFT based on how many were uploaded during instantiation.
 * Limit number of NFT's to 10 per wallet.
 
-This is a template to build smart contracts in Rust to run inside a
-[Cosmos SDK](https://github.com/cosmos/cosmos-sdk) module on all chains that enable it.
-To understand the framework better, please read the overview in the
-[cosmwasm repo](https://github.com/CosmWasm/cosmwasm/blob/master/README.md),
-and dig into the [cosmwasm docs](https://www.cosmwasm.com).
-This assumes you understand the theory and just want to get coding.
-
-## Creating a new repo from template
-
-Assuming you have a recent version of rust and cargo (v1.55.0+) installed
-(via [rustup](https://rustup.rs/)),
-then the following should get you a new repo to start a contract:
-
-(Note that recent cargo-generate requires Rust 1.55 features or produces a compile error)
-
-Install [cargo-generate](https://github.com/ashleygwilliams/cargo-generate) and cargo-run-script.
-Unless you did that before, run this line now:
-
-```sh
-cargo install cargo-generate --features vendored-openssl
-cargo install cargo-run-script
+### Testing on local terra
 ```
-
-Now, use it to create your new contract.
-Go to the folder in which you want to place it and run:
-
-
-**Latest: 1.0.0-beta**
-
-```sh
-cargo generate --git https://github.com/CosmWasm/cw-template.git --name PROJECT_NAME
-````
-
-**Older Version**
-
-Pass version as branch flag:
-
-```sh
-cargo generate --git https://github.com/CosmWasm/cw-template.git --branch <version> --name PROJECT_NAME
-````
-
-Example:
-
-```sh
-cargo generate --git https://github.com/CosmWasm/cw-template.git --branch 0.16 --name PROJECT_NAME
+terrad tx wasm store artifacts/squares.wasm --from user1 --chain-id=localterra --gas=auto --fees=100000uluna --broadcast-mode=block
+terrad tx wasm instantiate 1 '{"base":{"minter":"terra1dcegyrekltswvyy0xy69ydgxn9x8x32zdtapd8","name":"test123","symbol":"lol"},"tokens":[{"uri":"something1"},{"uri":"something2"}]}' --from user1 --chain-id=localterra --fees=10000uluna --gas=auto --broadcast-mode=block
+terrad tx wasm execute terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5 '{"mint":{"token_id":"","owner":"","token_uri":"","extension":{"uri":""}}}' --from user1 --chain-id=localterra --fees=1000000uluna --gas=auto --broadcast-mode=block
+terrad query wasm contract-store terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5 '{"all_nft_info":{"token_id":"1"}}'
 ```
-
-You will now have a new folder called `PROJECT_NAME` (I hope you changed that to something else)
-containing a simple working contract and build system that you can customize.
-
-## Create a Repo
-
-After generating, you have a initialized local git repo, but no commits, and no remote.
-Go to a server (eg. github) and create a new upstream repo (called `YOUR-GIT-URL` below).
-Then run the following:
-
-```sh
-# this is needed to create a valid Cargo.lock file (see below)
-cargo check
-git branch -M main
-git add .
-git commit -m 'Initial Commit'
-git remote add origin YOUR-GIT-URL
-git push -u origin main
-```
-
-## CI Support
-
-We have template configurations for both [GitHub Actions](.github/workflows/Basic.yml)
-and [Circle CI](.circleci/config.yml) in the generated project, so you can
-get up and running with CI right away.
-
-One note is that the CI runs all `cargo` commands
-with `--locked` to ensure it uses the exact same versions as you have locally. This also means
-you must have an up-to-date `Cargo.lock` file, which is not auto-generated.
-The first time you set up the project (or after adding any dep), you should ensure the
-`Cargo.lock` file is updated, so the CI will test properly. This can be done simply by
-running `cargo check` or `cargo unit-test`.
-
-## Using your project
-
-Once you have your custom repo, you should check out [Developing](./Developing.md) to explain
-more on how to run tests and develop code. Or go through the
-[online tutorial](https://docs.cosmwasm.com/) to get a better feel
-of how to develop.
-
-[Publishing](./Publishing.md) contains useful information on how to publish your contract
-to the world, once you are ready to deploy it on a running blockchain. And
-[Importing](./Importing.md) contains information about pulling in other contracts or crates
-that have been published.
-
-Please replace this README file with information about your specific project. You can keep
-the `Developing.md` and `Publishing.md` files as useful referenced, but please set some
-proper description in the README.
-
-## Gitpod integration
-
-[Gitpod](https://www.gitpod.io/) container-based development platform will be enabled on your project by default.
-
-Workspace contains:
- - **rust**: for builds
- - [wasmd](https://github.com/CosmWasm/wasmd): for local node setup and client
- - **jq**: shell JSON manipulation tool
-
-Follow [Gitpod Getting Started](https://www.gitpod.io/docs/getting-started) and launch your workspace.
 
