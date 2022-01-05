@@ -10,6 +10,9 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CustomNFT {
     pub uri: String,
+    pub family_color: String,
+    pub color_name: String,
+    pub hex_code: String,
 }
 
 // #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
