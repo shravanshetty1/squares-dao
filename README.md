@@ -6,6 +6,7 @@
 * Limit number of NFT's to 10 per wallet.
 
 ### Testing on local terra
+Also refer to [this](https://docs.terra.money/Tutorials/Smart-contracts/Interact-with-smart-contract.html#requirements).
 ```
 terrad tx wasm store artifacts/squares.wasm --from user1 --chain-id=localterra --gas=auto --fees=100000uluna --broadcast-mode=block
 terrad tx wasm instantiate 1 '{"base":{"minter":"terra1dcegyrekltswvyy0xy69ydgxn9x8x32zdtapd8","name":"test123","symbol":"lol"},"tokens":[{"uri":"something1"},{"uri":"something2"}]}' --from user1 --chain-id=localterra --fees=10000uluna --gas=auto --broadcast-mode=block
