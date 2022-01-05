@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::contract::CustomNFT;
+use crate::msg::CustomNFT;
 use cosmwasm_std::Addr;
 use cw_storage_plus::Item;
 

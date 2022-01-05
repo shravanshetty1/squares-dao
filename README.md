@@ -1,4 +1,9 @@
-# CosmWasm Starter Pack
+
+
+# Squares-dao
+### NFT spec
+* Number of NFT based on how many were uploaded during instantiation.
+* Limit number of NFT's to 10 per wallet.
 
 This is a template to build smart contracts in Rust to run inside a
 [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) module on all chains that enable it.
