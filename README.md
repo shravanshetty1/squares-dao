@@ -5,6 +5,10 @@
 * Number of NFT based on how many were uploaded during instantiation.
 * Limit number of NFT's to 10 per wallet.
 
+Need clarification on metadata fields.
+
+Contract address on testnet - terra1tel8kpz5turya9vyjew327uyc99he2s6y4x3gs
+
 ### Testing on local terra
 Also refer to [this](https://docs.terra.money/Tutorials/Smart-contracts/Interact-with-smart-contract.html#requirements).
 ```
