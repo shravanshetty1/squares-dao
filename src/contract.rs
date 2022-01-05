@@ -2,16 +2,14 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Order, Response, StdResult};
 
-use crate::error::ContractError;
 use crate::msg::{CustomNFT, InstantiateMsg};
 use crate::state::{State, STATE};
-use cw721::Cw721Query;
 use cw721_base::state::TokenInfo;
 use cw721_base::Cw721Contract;
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:squares";
-const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+// const CONTRACT_NAME: &str = "crates.io:squares";
+// const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -59,24 +57,26 @@ pub fn mint(
     _env: Env,
     info: MessageInfo,
 ) -> Result<Response, cw721_base::ContractError> {
-    let owned_tokens: Vec<_> = tract
+    let owned_tokens = tract
         .tokens
         .idx
         .owner
         .prefix(info.sender.clone())
         .keys(deps.storage, None, None, Order::Ascending)
-        .collect();
+        .count();
 
-    if owned_tokens.len() > 10 {
+    if owned_tokens > 10 {
         return Err(cw721_base::ContractError::Std(
             cosmwasm_std::StdError::generic_err("a single wallet cannot own more than 10 tokens"),
         ));
     }
 
     let mut state = STATE.load(deps.storage)?;
-    let token_extension = state.tokens.pop().ok_or(cw721_base::ContractError::Std(
-        cosmwasm_std::StdError::generic_err("contract is out of tokens"),
-    ))?;
+    let token_extension = state.tokens.pop().ok_or_else(|| {
+        cw721_base::ContractError::Std(cosmwasm_std::StdError::generic_err(
+            "contract is out of tokens",
+        ))
+    })?;
     STATE.save(deps.storage, &state)?;
     let token = TokenInfo {
         owner: info.sender.clone(),
