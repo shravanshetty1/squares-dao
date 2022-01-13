@@ -1,1 +1,1 @@
-2cb1ae7eb8b633a1086d5af5842f13223edf3ce36e771629354392fca1399da2  ./target/wasm32-unknown-unknown/release/squares.wasm
+24330ec10864130b22d8b0af1d431c7d4a8de6ae1551cbecb91dde8def1a6c3f  ./target/wasm32-unknown-unknown/release/squares.wasm

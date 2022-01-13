@@ -7,7 +7,7 @@
 
 Need clarification on metadata fields.
 
-Contract address on testnet - terra1tel8kpz5turya9vyjew327uyc99he2s6y4x3gs
+Contract address on testnet - terra1n5054am4qsldha9gan2hkhv3jq35ylpcfa9d4k
 
 ### Testing on local terra
 Also refer to [this](https://docs.terra.money/Tutorials/Smart-contracts/Interact-with-smart-contract.html#requirements).
