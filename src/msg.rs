@@ -9,6 +9,13 @@ pub struct InstantiateMsg {
     pub base: cw721_base::InstantiateMsg,
 }
 
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum ExecuteMsg<T> {
+    BatchMint { amount: u64 },
+    CW721(cw721_base::ExecuteMsg<T>),
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CustomNFT {
     pub uri: String,

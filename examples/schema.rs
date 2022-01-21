@@ -3,9 +3,9 @@ use std::fs::create_dir_all;
 
 use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
 
-use cw721_base::ExecuteMsg;
 use cw721_base::QueryMsg;
 use squares::msg::CustomNFT;
+use squares::msg::ExecuteMsg;
 use squares::msg::InstantiateMsg;
 use squares::state::State;
 
