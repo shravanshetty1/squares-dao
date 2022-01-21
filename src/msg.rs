@@ -1,9 +1,11 @@
+use crate::state::MintPrice;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub tokens: Vec<CustomNFT>,
+    pub mint_price: MintPrice,
     pub base: cw721_base::InstantiateMsg,
 }
 

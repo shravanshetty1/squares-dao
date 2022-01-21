@@ -1,6 +1,9 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Order, Response, StdResult};
+use cosmwasm_std::{
+    BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, MessageInfo, Order, Response, StdResult,
+    Uint128,
+};
 
 use crate::msg::{CustomNFT, InstantiateMsg};
 use crate::state::{State, STATE};
@@ -26,6 +29,7 @@ pub fn instantiate(
         &State {
             owner: info.sender.clone(),
             tokens: msg.tokens,
+            mint_price: msg.mint_price,
         },
     )?;
 
@@ -97,7 +101,14 @@ pub fn mint(
     Ok(Response::new()
         .add_attribute("action", "mint")
         .add_attribute("minter", info.sender)
-        .add_attribute("token_id", id.to_string()))
+        .add_attribute("token_id", id.to_string())
+        .add_message(BankMsg::Send {
+            to_address: state.owner.to_string(),
+            amount: vec![Coin {
+                denom: state.mint_price.denom.clone(),
+                amount: Uint128::new(state.mint_price.amount as u128),
+            }],
+        }))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

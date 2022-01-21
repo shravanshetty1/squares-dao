@@ -4,11 +4,15 @@
   "type": "object",
   "required": [
     "base",
+    "mint_price",
     "tokens"
   ],
   "properties": {
     "base": {
       "$ref": "#/definitions/InstantiateMsg"
+    },
+    "mint_price": {
+      "$ref": "#/definitions/MintPrice"
     },
     "tokens": {
       "type": "array",
@@ -59,6 +63,23 @@
         },
         "symbol": {
           "description": "Symbol of the NFT contract",
+          "type": "string"
+        }
+      }
+    },
+    "MintPrice": {
+      "type": "object",
+      "required": [
+        "amount",
+        "denom"
+      ],
+      "properties": {
+        "amount": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "denom": {
           "type": "string"
         }
       }

@@ -3,10 +3,14 @@
   "title": "State",
   "type": "object",
   "required": [
+    "mint_price",
     "owner",
     "tokens"
   ],
   "properties": {
+    "mint_price": {
+      "$ref": "#/definitions/MintPrice"
+    },
     "owner": {
       "$ref": "#/definitions/Addr"
     },
@@ -41,6 +45,23 @@
           "type": "string"
         },
         "uri": {
+          "type": "string"
+        }
+      }
+    },
+    "MintPrice": {
+      "type": "object",
+      "required": [
+        "amount",
+        "denom"
+      ],
+      "properties": {
+        "amount": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "denom": {
           "type": "string"
         }
       }
