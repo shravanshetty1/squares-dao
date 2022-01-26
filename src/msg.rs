@@ -18,9 +18,9 @@ pub enum ExecuteMsg<T> {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CustomNFT {
-    pub uri: String,
+    pub image: String,
     pub family_color: String,
-    pub color_name: String,
+    pub name: String,
     pub hex_code: String,
 }
 

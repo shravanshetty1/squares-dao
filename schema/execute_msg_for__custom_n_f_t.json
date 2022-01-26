@@ -45,22 +45,22 @@
     "CustomNFT": {
       "type": "object",
       "required": [
-        "color_name",
         "family_color",
         "hex_code",
-        "uri"
+        "image",
+        "name"
       ],
       "properties": {
-        "color_name": {
-          "type": "string"
-        },
         "family_color": {
           "type": "string"
         },
         "hex_code": {
           "type": "string"
         },
-        "uri": {
+        "image": {
+          "type": "string"
+        },
+        "name": {
           "type": "string"
         }
       }

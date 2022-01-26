@@ -93,7 +93,7 @@ pub fn batch_mint(
         let token = TokenInfo {
             owner: info.sender.clone(),
             approvals: vec![],
-            token_uri: Some(token_extension.uri.clone()),
+            token_uri: Some(token_extension.image.clone()),
             extension: token_extension,
         };
 
