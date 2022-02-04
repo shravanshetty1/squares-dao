@@ -13,5 +13,5 @@ pub struct InstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg<T> {
     BatchMint { amount: u64 },
-    CW721(cw721_base::ExecuteMsg<T>),
+    Cw721(cw721_base::ExecuteMsg<T>),
 }

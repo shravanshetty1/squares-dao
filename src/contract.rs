@@ -47,7 +47,7 @@ pub fn execute(
     let tract = Cw721Contract::<Extension, Empty>::default();
     match msg {
         ExecuteMsg::BatchMint { amount } => batch_mint(tract, deps, _env, info, amount),
-        ExecuteMsg::CW721(msg) => match msg {
+        ExecuteMsg::Cw721(msg) => match msg {
             cw721_base::ExecuteMsg::Mint(_msg) => batch_mint(tract, deps, _env, info, 1),
             _ => tract.execute(deps, _env, info, msg),
         },
