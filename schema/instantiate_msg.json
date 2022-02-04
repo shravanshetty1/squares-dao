@@ -17,34 +17,11 @@
     "tokens": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/CustomNFT"
+        "type": "string"
       }
     }
   },
   "definitions": {
-    "CustomNFT": {
-      "type": "object",
-      "required": [
-        "family_color",
-        "hex_code",
-        "image",
-        "name"
-      ],
-      "properties": {
-        "family_color": {
-          "type": "string"
-        },
-        "hex_code": {
-          "type": "string"
-        },
-        "image": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
     "InstantiateMsg": {
       "type": "object",
       "required": [

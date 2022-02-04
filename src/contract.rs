@@ -5,10 +5,10 @@ use cosmwasm_std::{
     Uint128,
 };
 
-use crate::msg::{CustomNFT, ExecuteMsg, InstantiateMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{State, STATE};
 use cw721_base::state::TokenInfo;
-use cw721_base::Cw721Contract;
+use cw721_base::{Cw721Contract, Extension};
 
 // version info for migration info
 // const CONTRACT_NAME: &str = "crates.io:squares";
@@ -33,7 +33,7 @@ pub fn instantiate(
         },
     )?;
 
-    let tract = Cw721Contract::<CustomNFT, Empty>::default();
+    let tract = Cw721Contract::<Extension, Empty>::default();
     let resp = tract.instantiate(deps, _env, info, msg.base)?;
 
     Ok(resp
@@ -46,9 +46,9 @@ pub fn execute(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: ExecuteMsg<CustomNFT>,
+    msg: ExecuteMsg<Extension>,
 ) -> Result<Response, cw721_base::ContractError> {
-    let tract = Cw721Contract::<CustomNFT, Empty>::default();
+    let tract = Cw721Contract::<Extension, Empty>::default();
     match msg {
         ExecuteMsg::BatchMint { amount } => batch_mint(tract, deps, _env, info, amount),
         ExecuteMsg::CW721(msg) => match msg {
@@ -59,32 +59,30 @@ pub fn execute(
 }
 
 pub fn batch_mint(
-    tract: Cw721Contract<CustomNFT, Empty>,
+    tract: Cw721Contract<Extension, Empty>,
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
     n: u64,
 ) -> Result<Response, cw721_base::ContractError> {
+    let owned_tokens = tract
+        .tokens
+        .idx
+        .owner
+        .prefix(info.sender.clone())
+        .keys(deps.storage, None, None, Order::Ascending)
+        .count();
+
+    if owned_tokens as u64 + n > 10 {
+        return Err(cw721_base::ContractError::Std(
+            cosmwasm_std::StdError::generic_err("a single wallet cannot own more than 10 tokens"),
+        ));
+    }
+
     let mut token_ids: Vec<String> = Vec::new();
     for _ in 0..n {
-        let owned_tokens = tract
-            .tokens
-            .idx
-            .owner
-            .prefix(info.sender.clone())
-            .keys(deps.storage, None, None, Order::Ascending)
-            .count();
-
-        if owned_tokens > 10 {
-            return Err(cw721_base::ContractError::Std(
-                cosmwasm_std::StdError::generic_err(
-                    "a single wallet cannot own more than 10 tokens",
-                ),
-            ));
-        }
-
         let mut state = STATE.load(deps.storage)?;
-        let token_extension = state.tokens.pop().ok_or_else(|| {
+        let token_uri = state.tokens.pop().ok_or_else(|| {
             cw721_base::ContractError::Std(cosmwasm_std::StdError::generic_err(
                 "contract is out of tokens",
             ))
@@ -93,8 +91,8 @@ pub fn batch_mint(
         let token = TokenInfo {
             owner: info.sender.clone(),
             approvals: vec![],
-            token_uri: Some(token_extension.image.clone()),
-            extension: token_extension,
+            token_uri: Some(token_uri.clone()),
+            extension: None,
         };
 
         let id = tract.token_count(deps.storage)? + 1;
@@ -125,6 +123,6 @@ pub fn batch_mint(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: cw721_base::QueryMsg) -> StdResult<Binary> {
-    let tract = Cw721Contract::<CustomNFT, Empty>::default();
+    let tract = Cw721Contract::<Extension, Empty>::default();
     tract.query(deps, _env, msg)
 }

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-    pub tokens: Vec<CustomNFT>,
+    pub tokens: Vec<String>,
     pub mint_price: MintPrice,
     pub base: cw721_base::InstantiateMsg,
 }
@@ -14,14 +14,6 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg<T> {
     BatchMint { amount: u64 },
     CW721(cw721_base::ExecuteMsg<T>),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct CustomNFT {
-    pub image: String,
-    pub family_color: String,
-    pub name: String,
-    pub hex_code: String,
 }
 
 // #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
