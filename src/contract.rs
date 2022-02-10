@@ -7,6 +7,7 @@ use cosmwasm_std::{
 
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{State, STATE};
+use cw721::Cw721Execute;
 use cw721_base::state::TokenInfo;
 use cw721_base::{Cw721Contract, Extension};
 
@@ -40,17 +41,35 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg<Extension>,
 ) -> Result<Response, cw721_base::ContractError> {
     let tract = Cw721Contract::<Extension, Empty>::default();
     match msg {
-        ExecuteMsg::BatchMint { amount } => batch_mint(tract, deps, _env, info, amount),
-        ExecuteMsg::Cw721(msg) => match msg {
-            cw721_base::ExecuteMsg::Mint(_msg) => batch_mint(tract, deps, _env, info, 1),
-            _ => tract.execute(deps, _env, info, msg),
-        },
+        ExecuteMsg::BatchMint { amount } => batch_mint(tract, deps, env, info, amount),
+        ExecuteMsg::Mint(msg) => tract.mint(deps, env, info, msg),
+        ExecuteMsg::Approve {
+            spender,
+            token_id,
+            expires,
+        } => tract.approve(deps, env, info, spender, token_id, expires),
+        ExecuteMsg::Revoke { spender, token_id } => {
+            tract.revoke(deps, env, info, spender, token_id)
+        }
+        ExecuteMsg::ApproveAll { operator, expires } => {
+            tract.approve_all(deps, env, info, operator, expires)
+        }
+        ExecuteMsg::RevokeAll { operator } => tract.revoke_all(deps, env, info, operator),
+        ExecuteMsg::TransferNft {
+            recipient,
+            token_id,
+        } => tract.transfer_nft(deps, env, info, recipient, token_id),
+        ExecuteMsg::SendNft {
+            contract,
+            token_id,
+            msg,
+        } => tract.send_nft(deps, env, info, contract, token_id, msg),
     }
 }
 

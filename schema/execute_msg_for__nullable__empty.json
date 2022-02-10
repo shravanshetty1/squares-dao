@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ExecuteMsg_for_Nullable_Empty",
+  "description": "This is like Cw721ExecuteMsg but we add a Mint command for an owner to make this stand-alone. You will likely want to remove mint and use other control logic in any contract that inherits this.",
   "anyOf": [
     {
       "type": "object",
@@ -25,13 +26,180 @@
       "additionalProperties": false
     },
     {
+      "description": "Transfer is a base message to move a token to another account without triggering actions",
       "type": "object",
       "required": [
-        "c_w721"
+        "transfer_nft"
       ],
       "properties": {
-        "c_w721": {
-          "$ref": "#/definitions/ExecuteMsg_for_Nullable_Empty"
+        "transfer_nft": {
+          "type": "object",
+          "required": [
+            "recipient",
+            "token_id"
+          ],
+          "properties": {
+            "recipient": {
+              "type": "string"
+            },
+            "token_id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Send is a base message to transfer a token to a contract and trigger an action on the receiving contract.",
+      "type": "object",
+      "required": [
+        "send_nft"
+      ],
+      "properties": {
+        "send_nft": {
+          "type": "object",
+          "required": [
+            "contract",
+            "msg",
+            "token_id"
+          ],
+          "properties": {
+            "contract": {
+              "type": "string"
+            },
+            "msg": {
+              "$ref": "#/definitions/Binary"
+            },
+            "token_id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Allows operator to transfer / send the token from the owner's account. If expiration is set, then this allowance has a time/height limit",
+      "type": "object",
+      "required": [
+        "approve"
+      ],
+      "properties": {
+        "approve": {
+          "type": "object",
+          "required": [
+            "spender",
+            "token_id"
+          ],
+          "properties": {
+            "expires": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expiration"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "spender": {
+              "type": "string"
+            },
+            "token_id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Remove previously granted Approval",
+      "type": "object",
+      "required": [
+        "revoke"
+      ],
+      "properties": {
+        "revoke": {
+          "type": "object",
+          "required": [
+            "spender",
+            "token_id"
+          ],
+          "properties": {
+            "spender": {
+              "type": "string"
+            },
+            "token_id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Allows operator to transfer / send any token from the owner's account. If expiration is set, then this allowance has a time/height limit",
+      "type": "object",
+      "required": [
+        "approve_all"
+      ],
+      "properties": {
+        "approve_all": {
+          "type": "object",
+          "required": [
+            "operator"
+          ],
+          "properties": {
+            "expires": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expiration"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "operator": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Remove previously granted ApproveAll permission",
+      "type": "object",
+      "required": [
+        "revoke_all"
+      ],
+      "properties": {
+        "revoke_all": {
+          "type": "object",
+          "required": [
+            "operator"
+          ],
+          "properties": {
+            "operator": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Mint a new NFT, can only be called by the contract minter",
+      "type": "object",
+      "required": [
+        "mint"
+      ],
+      "properties": {
+        "mint": {
+          "$ref": "#/definitions/MintMsg_for_Nullable_Empty"
         }
       },
       "additionalProperties": false
@@ -45,190 +213,6 @@
     "Empty": {
       "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
       "type": "object"
-    },
-    "ExecuteMsg_for_Nullable_Empty": {
-      "description": "This is like Cw721ExecuteMsg but we add a Mint command for an owner to make this stand-alone. You will likely want to remove mint and use other control logic in any contract that inherits this.",
-      "anyOf": [
-        {
-          "description": "Transfer is a base message to move a token to another account without triggering actions",
-          "type": "object",
-          "required": [
-            "transfer_nft"
-          ],
-          "properties": {
-            "transfer_nft": {
-              "type": "object",
-              "required": [
-                "recipient",
-                "token_id"
-              ],
-              "properties": {
-                "recipient": {
-                  "type": "string"
-                },
-                "token_id": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "description": "Send is a base message to transfer a token to a contract and trigger an action on the receiving contract.",
-          "type": "object",
-          "required": [
-            "send_nft"
-          ],
-          "properties": {
-            "send_nft": {
-              "type": "object",
-              "required": [
-                "contract",
-                "msg",
-                "token_id"
-              ],
-              "properties": {
-                "contract": {
-                  "type": "string"
-                },
-                "msg": {
-                  "$ref": "#/definitions/Binary"
-                },
-                "token_id": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "description": "Allows operator to transfer / send the token from the owner's account. If expiration is set, then this allowance has a time/height limit",
-          "type": "object",
-          "required": [
-            "approve"
-          ],
-          "properties": {
-            "approve": {
-              "type": "object",
-              "required": [
-                "spender",
-                "token_id"
-              ],
-              "properties": {
-                "expires": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/definitions/Expiration"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "spender": {
-                  "type": "string"
-                },
-                "token_id": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "description": "Remove previously granted Approval",
-          "type": "object",
-          "required": [
-            "revoke"
-          ],
-          "properties": {
-            "revoke": {
-              "type": "object",
-              "required": [
-                "spender",
-                "token_id"
-              ],
-              "properties": {
-                "spender": {
-                  "type": "string"
-                },
-                "token_id": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "description": "Allows operator to transfer / send any token from the owner's account. If expiration is set, then this allowance has a time/height limit",
-          "type": "object",
-          "required": [
-            "approve_all"
-          ],
-          "properties": {
-            "approve_all": {
-              "type": "object",
-              "required": [
-                "operator"
-              ],
-              "properties": {
-                "expires": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/definitions/Expiration"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "operator": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "description": "Remove previously granted ApproveAll permission",
-          "type": "object",
-          "required": [
-            "revoke_all"
-          ],
-          "properties": {
-            "revoke_all": {
-              "type": "object",
-              "required": [
-                "operator"
-              ],
-              "properties": {
-                "operator": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "description": "Mint a new NFT, can only be called by the contract minter",
-          "type": "object",
-          "required": [
-            "mint"
-          ],
-          "properties": {
-            "mint": {
-              "$ref": "#/definitions/MintMsg_for_Nullable_Empty"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
     },
     "Expiration": {
       "description": "Expiration represents a point in time when some event happens. It can compare with a BlockInfo and will return is_expired() == true once the condition is hit (and for every block in the future)",
