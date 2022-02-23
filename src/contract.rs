@@ -12,10 +12,6 @@ use cw721_base::state::TokenInfo;
 use cw721_base::{Cw721Contract, Extension};
 use std::ops::Mul;
 
-const TOKEN_COUNT: usize = 1000;
-const DEV_FUND_PERCENT: u64 = 3;
-const CREATOR_FUND_PERCENT: u64 = 4;
-
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     mut deps: DepsMut,
@@ -23,20 +19,12 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, cw721_base::ContractError> {
-    if msg.tokens.len() != TOKEN_COUNT {
-        return Err(cosmwasm_std::StdError::generic_err(
-            "unexpected token count, expecting 1000 tokens",
-        )
-        .into());
-    }
-
+    let token_count = msg.tokens.len();
     STATE.save(
         deps.storage,
         &State {
-            creator_fund: msg.creator_fund.clone(),
-            dev_fund: msg.dev_fund.clone(),
+            config: msg.config.clone(),
             tokens: msg.tokens,
-            mint_fee: msg.mint_price,
         },
     )?;
 
@@ -47,26 +35,26 @@ pub fn instantiate(
         &tract,
         deps.branch(),
         MessageInfo {
-            sender: msg.creator_fund.clone(),
+            sender: msg.config.creator_fund.clone(),
             funds: vec![],
         },
-        40,
+        msg.config.creator_fund_nft_count,
     )?;
 
     batch_mint(
         &tract,
         deps.branch(),
         MessageInfo {
-            sender: msg.dev_fund.clone(),
+            sender: msg.config.dev_fund.clone(),
             funds: vec![],
         },
-        20,
+        msg.config.dev_fund_nft_count,
     )?;
 
     Ok(resp
-        .add_attribute("creator_fund", msg.creator_fund)
-        .add_attribute("dev_fund", msg.dev_fund)
-        .add_attribute("token_count", TOKEN_COUNT.to_string()))
+        .add_attribute("creator_fund", msg.config.creator_fund)
+        .add_attribute("dev_fund", msg.config.dev_fund)
+        .add_attribute("token_count", token_count.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -110,14 +98,17 @@ pub fn try_batch_mint(
     info: MessageInfo,
     n: u64,
 ) -> Result<Response, cw721_base::ContractError> {
-    let state = STATE.load(deps.storage)?;
-    let expected_fee = state.mint_fee.clone();
+    let conf = STATE.load(deps.storage)?.config;
+    let expected_fee = conf.mint_fee.clone();
     let got_fee = info
         .funds
         .iter()
         .find(|got| got.denom == expected_fee.denom)
         .ok_or_else(|| {
-            cosmwasm_std::StdError::generic_err("could not find funds with matching denom")
+            cosmwasm_std::StdError::generic_err(format!(
+                "could not find funds with denom {}",
+                expected_fee.denom
+            ))
         })?;
     let expected_fee_amount = expected_fee
         .amount
@@ -125,8 +116,8 @@ pub fn try_batch_mint(
         .map_err(|_| cosmwasm_std::StdError::generic_err("overflow error"))?;
     if got_fee.amount.le(&expected_fee_amount) {
         return Err(cosmwasm_std::StdError::generic_err(format!(
-            "insufficient fee, expected - {}, got - {}",
-            expected_fee_amount, got_fee.amount
+            "insufficient fee, expected - {} {}, got - {} {}",
+            expected_fee_amount, expected_fee.denom, got_fee.amount, got_fee.denom
         ))
         .into());
     }
@@ -149,17 +140,19 @@ pub fn try_batch_mint(
 
     let mut resp = Response::new();
     resp = resp.add_message(BankMsg::Send {
-        to_address: String::from(state.dev_fund.clone()),
+        to_address: String::from(conf.dev_fund.clone()),
         amount: vec![Coin {
-            denom: state.mint_fee.denom.clone(),
-            amount: got_fee.amount.mul(Decimal::percent(DEV_FUND_PERCENT)),
+            denom: conf.mint_fee.denom.clone(),
+            amount: got_fee.amount.mul(Decimal::percent(conf.dev_fund_percent)),
         }],
     });
     resp = resp.add_message(BankMsg::Send {
-        to_address: String::from(state.creator_fund.clone()),
+        to_address: String::from(conf.creator_fund.clone()),
         amount: vec![Coin {
-            denom: state.mint_fee.denom,
-            amount: got_fee.amount.mul(Decimal::percent(CREATOR_FUND_PERCENT)),
+            denom: conf.mint_fee.denom,
+            amount: got_fee
+                .amount
+                .mul(Decimal::percent(conf.creator_fund_percent)),
         }],
     });
 
