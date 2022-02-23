@@ -18,3 +18,5 @@ terrad tx wasm execute terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5 '{"mint":{"t
 terrad query wasm contract-store terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5 '{"all_nft_info":{"token_id":"1"}}'
 ```
 
+### Build
+`cargo run-script optimize`

@@ -1,7 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    Binary, Deps, DepsMut, Empty, Env, MessageInfo, Order, Response, StdResult, Uint128,
+    BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Empty, Env, MessageInfo, Order, Response,
+    StdResult, Uint128,
 };
 
 use crate::msg::{ExecuteMsg, InstantiateMsg};
@@ -9,16 +10,20 @@ use crate::state::{State, STATE};
 use cw721::Cw721Execute;
 use cw721_base::state::TokenInfo;
 use cw721_base::{Cw721Contract, Extension};
+use std::ops::Mul;
+
+const TOKEN_COUNT: usize = 1000;
+const DEV_FUND_PERCENT: u64 = 3;
+const CREATOR_FUND_PERCENT: u64 = 4;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    deps: DepsMut,
+    mut deps: DepsMut,
     env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, cw721_base::ContractError> {
-    let token_count = msg.tokens.len();
-    if token_count != 1000 {
+    if msg.tokens.len() != TOKEN_COUNT {
         return Err(cosmwasm_std::StdError::generic_err(
             "unexpected token count, expecting 1000 tokens",
         )
@@ -31,37 +36,37 @@ pub fn instantiate(
             creator_fund: msg.creator_fund.clone(),
             dev_fund: msg.dev_fund.clone(),
             tokens: msg.tokens,
-            mint_price: msg.mint_price,
+            mint_fee: msg.mint_price,
         },
     )?;
 
     let tract = Cw721Contract::<Extension, Empty>::default();
-    let resp = tract.instantiate(deps, env, info, msg.base)?;
+    let resp = tract.instantiate(deps.branch(), env, info, msg.base)?;
 
-    // batch_mint(
-    //     &tract,
-    //     deps_ref,
-    //     MessageInfo {
-    //         sender: msg.creator_fund.clone(),
-    //         funds: vec![],
-    //     },
-    //     40,
-    // )?;
-    //
-    // batch_mint(
-    //     &tract,
-    //     deps_ref,
-    //     MessageInfo {
-    //         sender: msg.dev_fund.clone(),
-    //         funds: vec![],
-    //     },
-    //     20,
-    // )?;
+    batch_mint(
+        &tract,
+        deps.branch(),
+        MessageInfo {
+            sender: msg.creator_fund.clone(),
+            funds: vec![],
+        },
+        40,
+    )?;
+
+    batch_mint(
+        &tract,
+        deps.branch(),
+        MessageInfo {
+            sender: msg.dev_fund.clone(),
+            funds: vec![],
+        },
+        20,
+    )?;
 
     Ok(resp
         .add_attribute("creator_fund", msg.creator_fund)
         .add_attribute("dev_fund", msg.dev_fund)
-        .add_attribute("token_count", token_count.to_string()))
+        .add_attribute("token_count", TOKEN_COUNT.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -73,8 +78,8 @@ pub fn execute(
 ) -> Result<Response, cw721_base::ContractError> {
     let tract = Cw721Contract::<Extension, Empty>::default();
     match msg {
-        ExecuteMsg::BatchMint { amount } => batch_mint(&tract, deps, info, amount),
-        ExecuteMsg::Mint(_) => batch_mint(&tract, deps, info, 1),
+        ExecuteMsg::BatchMint { amount } => try_batch_mint(&tract, deps, info, amount),
+        ExecuteMsg::Mint(_) => try_batch_mint(&tract, deps, info, 1),
         ExecuteMsg::Approve {
             spender,
             token_id,
@@ -99,13 +104,14 @@ pub fn execute(
     }
 }
 
-pub fn batch_mint(
+pub fn try_batch_mint(
     tract: &Cw721Contract<Extension, Empty>,
     deps: DepsMut,
     info: MessageInfo,
     n: u64,
 ) -> Result<Response, cw721_base::ContractError> {
-    let expected_fee = STATE.load(deps.storage)?.mint_price;
+    let state = STATE.load(deps.storage)?;
+    let expected_fee = state.mint_fee.clone();
     let got_fee = info
         .funds
         .iter()
@@ -139,6 +145,36 @@ pub fn batch_mint(
         ));
     }
 
+    let token_ids: Vec<String> = batch_mint(tract, deps, info.clone(), n)?;
+
+    let mut resp = Response::new();
+    resp = resp.add_message(BankMsg::Send {
+        to_address: String::from(state.dev_fund.clone()),
+        amount: vec![Coin {
+            denom: state.mint_fee.denom.clone(),
+            amount: got_fee.amount.mul(Decimal::percent(DEV_FUND_PERCENT)),
+        }],
+    });
+    resp = resp.add_message(BankMsg::Send {
+        to_address: String::from(state.creator_fund.clone()),
+        amount: vec![Coin {
+            denom: state.mint_fee.denom,
+            amount: got_fee.amount.mul(Decimal::percent(CREATOR_FUND_PERCENT)),
+        }],
+    });
+
+    Ok(resp
+        .add_attribute("action", "mint")
+        .add_attribute("minter", info.sender)
+        .add_attribute("token_ids", token_ids.join(",")))
+}
+
+pub fn batch_mint(
+    tract: &Cw721Contract<Extension, Empty>,
+    deps: DepsMut,
+    info: MessageInfo,
+    n: u64,
+) -> Result<Vec<String>, cw721_base::ContractError> {
     let mut token_ids: Vec<String> = Vec::new();
     for _ in 0..n {
         let mut state = STATE.load(deps.storage)?;
@@ -167,10 +203,7 @@ pub fn batch_mint(
         token_ids.push(id.to_string())
     }
 
-    Ok(Response::new()
-        .add_attribute("action", "mint")
-        .add_attribute("minter", info.sender)
-        .add_attribute("token_ids", token_ids.join(",")))
+    Ok(token_ids)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
