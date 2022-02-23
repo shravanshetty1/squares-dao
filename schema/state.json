@@ -3,20 +3,12 @@
   "title": "State",
   "type": "object",
   "required": [
-    "creator_fund",
-    "dev_fund",
-    "mint_fee",
+    "config",
     "tokens"
   ],
   "properties": {
-    "creator_fund": {
-      "$ref": "#/definitions/Addr"
-    },
-    "dev_fund": {
-      "$ref": "#/definitions/Addr"
-    },
-    "mint_fee": {
-      "$ref": "#/definitions/Coin"
+    "config": {
+      "$ref": "#/definitions/Config"
     },
     "tokens": {
       "type": "array",
@@ -42,6 +34,49 @@
         },
         "denom": {
           "type": "string"
+        }
+      }
+    },
+    "Config": {
+      "type": "object",
+      "required": [
+        "creator_fund",
+        "creator_fund_nft_count",
+        "creator_fund_percent",
+        "dev_fund",
+        "dev_fund_nft_count",
+        "dev_fund_percent",
+        "mint_fee"
+      ],
+      "properties": {
+        "creator_fund": {
+          "$ref": "#/definitions/Addr"
+        },
+        "creator_fund_nft_count": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "creator_fund_percent": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "dev_fund": {
+          "$ref": "#/definitions/Addr"
+        },
+        "dev_fund_nft_count": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "dev_fund_percent": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "mint_fee": {
+          "$ref": "#/definitions/Coin"
         }
       }
     },
