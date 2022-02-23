@@ -1,8 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, MessageInfo, Order, Response, StdResult,
-    Uint128,
+    Binary, Deps, DepsMut, Empty, Env, MessageInfo, Order, Response, StdResult, Uint128,
 };
 
 use crate::msg::{ExecuteMsg, InstantiateMsg};
@@ -14,27 +13,54 @@ use cw721_base::{Cw721Contract, Extension};
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, cw721_base::ContractError> {
     let token_count = msg.tokens.len();
-    let owner = info.sender.clone();
+    if token_count != 1000 {
+        return Err(cosmwasm_std::StdError::generic_err(
+            "unexpected token count, expecting 1000 tokens",
+        )
+        .into());
+    }
 
     STATE.save(
         deps.storage,
         &State {
-            owner: info.sender.clone(),
+            creator_fund: msg.creator_fund.clone(),
+            dev_fund: msg.dev_fund.clone(),
             tokens: msg.tokens,
             mint_price: msg.mint_price,
         },
     )?;
 
     let tract = Cw721Contract::<Extension, Empty>::default();
-    let resp = tract.instantiate(deps, _env, info, msg.base)?;
+    let resp = tract.instantiate(deps, env, info, msg.base)?;
+
+    // batch_mint(
+    //     &tract,
+    //     deps_ref,
+    //     MessageInfo {
+    //         sender: msg.creator_fund.clone(),
+    //         funds: vec![],
+    //     },
+    //     40,
+    // )?;
+    //
+    // batch_mint(
+    //     &tract,
+    //     deps_ref,
+    //     MessageInfo {
+    //         sender: msg.dev_fund.clone(),
+    //         funds: vec![],
+    //     },
+    //     20,
+    // )?;
 
     Ok(resp
-        .add_attribute("owner", owner)
+        .add_attribute("creator_fund", msg.creator_fund)
+        .add_attribute("dev_fund", msg.dev_fund)
         .add_attribute("token_count", token_count.to_string()))
 }
 
@@ -47,8 +73,8 @@ pub fn execute(
 ) -> Result<Response, cw721_base::ContractError> {
     let tract = Cw721Contract::<Extension, Empty>::default();
     match msg {
-        ExecuteMsg::BatchMint { amount } => batch_mint(tract, deps, env, info, amount),
-        ExecuteMsg::Mint(msg) => tract.mint(deps, env, info, msg),
+        ExecuteMsg::BatchMint { amount } => batch_mint(&tract, deps, info, amount),
+        ExecuteMsg::Mint(_) => batch_mint(&tract, deps, info, 1),
         ExecuteMsg::Approve {
             spender,
             token_id,
@@ -74,12 +100,31 @@ pub fn execute(
 }
 
 pub fn batch_mint(
-    tract: Cw721Contract<Extension, Empty>,
+    tract: &Cw721Contract<Extension, Empty>,
     deps: DepsMut,
-    _env: Env,
     info: MessageInfo,
     n: u64,
 ) -> Result<Response, cw721_base::ContractError> {
+    let expected_fee = STATE.load(deps.storage)?.mint_price;
+    let got_fee = info
+        .funds
+        .iter()
+        .find(|got| got.denom == expected_fee.denom)
+        .ok_or_else(|| {
+            cosmwasm_std::StdError::generic_err("could not find funds with matching denom")
+        })?;
+    let expected_fee_amount = expected_fee
+        .amount
+        .checked_mul(Uint128::new(n as u128))
+        .map_err(|_| cosmwasm_std::StdError::generic_err("overflow error"))?;
+    if got_fee.amount.le(&expected_fee_amount) {
+        return Err(cosmwasm_std::StdError::generic_err(format!(
+            "insufficient fee, expected - {}, got - {}",
+            expected_fee_amount, got_fee.amount
+        ))
+        .into());
+    }
+
     let owned_tokens = tract
         .tokens
         .idx
@@ -122,18 +167,10 @@ pub fn batch_mint(
         token_ids.push(id.to_string())
     }
 
-    let state = STATE.load(deps.storage)?;
     Ok(Response::new()
         .add_attribute("action", "mint")
         .add_attribute("minter", info.sender)
-        .add_attribute("token_ids", token_ids.join(","))
-        .add_message(BankMsg::Send {
-            to_address: state.owner.to_string(),
-            amount: vec![Coin {
-                denom: state.mint_price.denom.clone(),
-                amount: Uint128::new((state.mint_price.amount * n) as u128),
-            }],
-        }))
+        .add_attribute("token_ids", token_ids.join(",")))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

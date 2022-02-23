@@ -1,20 +1,15 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Coin};
 use cw_storage_plus::Item;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
-    pub owner: Addr,
+    pub creator_fund: Addr,
+    pub dev_fund: Addr,
     pub tokens: Vec<String>,
-    pub mint_price: MintPrice,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct MintPrice {
-    pub denom: String,
-    pub amount: u64,
+    pub mint_price: Coin,
 }
 
 pub const STATE: Item<State> = Item::new("state");

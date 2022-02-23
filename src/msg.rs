@@ -1,5 +1,4 @@
-use crate::state::MintPrice;
-use cosmwasm_std::Binary;
+use cosmwasm_std::{Addr, Binary, Coin};
 use cw721::Expiration;
 use cw721_base::MintMsg;
 use schemars::JsonSchema;
@@ -7,8 +6,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
+    pub creator_fund: Addr,
+    pub dev_fund: Addr,
     pub tokens: Vec<String>,
-    pub mint_price: MintPrice,
+    pub mint_price: Coin,
     pub base: cw721_base::InstantiateMsg,
 }
 
